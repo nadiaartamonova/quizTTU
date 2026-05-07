@@ -1,11 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import {
-  View,
-  Text,
-  Button,
-  StyleSheet,
-  Animated,
-} from 'react-native';
+import { View, Text, Button, StyleSheet, Animated } from 'react-native';
 import { Question } from '../types/Question';
 import { shuffleArray } from '../utils/shuffle';
 import { QUESTION_TIME } from '../constants/quiz';
@@ -36,13 +30,16 @@ export default function QuizScreen({ questions, onFinish }: Props) {
 
     const currentQuestion = questions[index];
     if (currentQuestion) {
-      setAnswers(
-        shuffleArray([
-          currentQuestion.optionA,
-          currentQuestion.optionB,
-          currentQuestion.optionC,
-        ])
-      );
+      const options = [
+        currentQuestion.optionA,
+        currentQuestion.optionB,
+        currentQuestion.optionC,
+        currentQuestion.correct,
+      ].filter((value) => value && value.trim().length > 0);
+
+      // Удаляем дубли (актуально для boolean)
+      const uniqueOptions = [...new Set(options)];
+      setAnswers(shuffleArray(uniqueOptions));
     }
 
     resetTimer();
@@ -136,20 +133,14 @@ export default function QuizScreen({ questions, onFinish }: Props) {
       <Text style={styles.timerText}>Aeg: {timeLeft}</Text>
 
       <View style={styles.progressBarBackground}>
-        <Animated.View
-          style={[styles.progressBarFill, { width: animatedWidth }]}
-        />
+        <Animated.View style={[styles.progressBarFill, { width: animatedWidth }]} />
       </View>
 
       <Text style={styles.question}>{current.question}</Text>
 
       {answers.map((item, answerIndex) => (
         <View style={styles.buttonWrap} key={`${current.id}-${answerIndex}-${item}`}>
-          <Button
-            title={item}
-            color="#E85A4F"
-            onPress={() => answer(item)}
-          />
+          <Button title={item} color="#E85A4F" onPress={() => answer(item)} />
         </View>
       ))}
     </View>
