@@ -6,7 +6,16 @@ import { QUESTION_TIME } from '../constants/quiz';
 
 interface Props {
   questions: Question[];
-  onFinish: (correct: number, wrong: number, total: number) => void;
+  onFinish: (correct: number, wrong: number, total: number, answersJson: string) => void;
+}
+
+interface QuestionAnswerLog {
+  questionId: number;
+  question: string;
+  selectedAnswer: string | null;
+  correctAnswer: string;
+  isCorrect: boolean;
+  timedOut: boolean;
 }
 
 export default function QuizScreen({ questions, onFinish }: Props) {
@@ -15,6 +24,7 @@ export default function QuizScreen({ questions, onFinish }: Props) {
   const [wrongAnswers, setWrongAnswers] = useState<number>(0);
   const [timeLeft, setTimeLeft] = useState<number>(QUESTION_TIME);
   const [answers, setAnswers] = useState<string[]>([]);
+  const [answerLog, setAnswerLog] = useState<QuestionAnswerLog[]>([]);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const progressAnim = useRef(new Animated.Value(1)).current;
@@ -23,6 +33,7 @@ export default function QuizScreen({ questions, onFinish }: Props) {
     setIndex(0);
     setScore(0);
     setWrongAnswers(0);
+    setAnswerLog([]);
   }, [questions]);
 
   useEffect(() => {
@@ -74,7 +85,7 @@ export default function QuizScreen({ questions, onFinish }: Props) {
           stopTimer();
 
           setTimeout(() => {
-            goNext(false);
+            goNext(false, null, true);
           }, 0);
 
           return 0;
@@ -85,16 +96,30 @@ export default function QuizScreen({ questions, onFinish }: Props) {
     }, 1000);
   };
 
-  const goNext = (isCorrect: boolean) => {
+  const goNext = (isCorrect: boolean, selectedAnswer: string | null, timedOut: boolean) => {
+    const currentQuestion = questions[index];
+    if (!currentQuestion) return;
+
+    const entry: QuestionAnswerLog = {
+      questionId: currentQuestion.id,
+      question: currentQuestion.question,
+      selectedAnswer,
+      correctAnswer: currentQuestion.correct,
+      isCorrect,
+      timedOut,
+    };
+
+    const nextLog = [...answerLog, entry];
     const newScore = isCorrect ? score + 1 : score;
     const newWrongAnswers = isCorrect ? wrongAnswers : wrongAnswers + 1;
 
     if (index < questions.length - 1) {
       setScore(newScore);
       setWrongAnswers(newWrongAnswers);
+      setAnswerLog(nextLog);
       setIndex((prev) => prev + 1);
     } else {
-      onFinish(newScore, newWrongAnswers, questions.length);
+      onFinish(newScore, newWrongAnswers, questions.length, JSON.stringify(nextLog));
     }
   };
 
@@ -106,7 +131,7 @@ export default function QuizScreen({ questions, onFinish }: Props) {
 
     stopTimer();
     progressAnim.stopAnimation();
-    goNext(isCorrect);
+   goNext(isCorrect, selected, false);
   };
 
   const current = questions[index];

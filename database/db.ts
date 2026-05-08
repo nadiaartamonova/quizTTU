@@ -37,6 +37,7 @@ interface SaveGameResultParams {
   categoryName: string;
   difficulty: 'easy' | 'medium' | 'hard';
   questionType: TriviaQuestionType;
+    answersJson?: string;
 }
 
 let db: SQLite.SQLiteDatabase | null = null;
@@ -101,6 +102,7 @@ export const initDB = async (): Promise<void> => {
   await addColumnIfMissing(database, 'results', 'categoryName', `TEXT NOT NULL DEFAULT 'Unknown'`);
   await addColumnIfMissing(database, 'results', 'difficulty', `TEXT NOT NULL DEFAULT 'easy'`);
   await addColumnIfMissing(database, 'results', 'questionType', `TEXT NOT NULL DEFAULT 'any'`);
+  await addColumnIfMissing(database, 'results', 'answersJson', `TEXT NOT NULL DEFAULT '[]'`);
 };
 
 export const clearQuestions = async (): Promise<void> => {
@@ -162,6 +164,7 @@ export const saveGameResult = async ({
   categoryName,
   difficulty,
   questionType,
+  answersJson = '[]',
 }: SaveGameResultParams): Promise<void> => {
   const database = await getDB();
 
@@ -171,8 +174,8 @@ export const saveGameResult = async ({
   await database.runAsync(
     `INSERT INTO results (
       userName, score, total, percentage, playedAt, durationSec,
-      questionCount, correctAnswers, wrongAnswers, categoryName, difficulty, questionType
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      questionCount, correctAnswers, wrongAnswers, categoryName, difficulty, questionType, answersJson
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     userName || 'Player',
     score,
     total,
@@ -184,7 +187,8 @@ export const saveGameResult = async ({
     wrongAnswers,
     categoryName,
     difficulty,
-    questionType
+    questionType,
+    answersJson
   );
 };
 

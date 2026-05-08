@@ -13,6 +13,26 @@ interface Props {
   onGoToMenu: () => void;
 }
 
+const formatDateTime = (iso: string): string => {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return iso;
+  return new Intl.DateTimeFormat('en-GB', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  }).format(date);
+};
+
+const safeName = (value: string | undefined | null): string => {
+  const trimmed = (value ?? '').trim();
+  return trimmed.length > 0 ? trimmed : 'Player';
+};
+
+const prettyType = (value: string): string => {
+  if (value === 'boolean') return 'True / False';
+  if (value === 'multiple') return 'Multiple choice';
+  return 'Any';
+};
+
 export default function ResultScreen({
   score,
   total,
@@ -29,16 +49,24 @@ export default function ResultScreen({
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Result</Text>
-      <Text style={styles.totalText}>{score}/{total}</Text>
+      <Text style={styles.totalText}>
+        {score}/{total}
+      </Text>
       <Text style={styles.percentText}>{percentage}%</Text>
       <Text style={styles.timeText}>Time: {durationSec}s</Text>
 
       <View style={styles.sectionBox}>
         <Text style={styles.sectionTitle}>Best</Text>
         {bestResult ? (
-          <Text style={styles.bestText}>
-            {bestResult.userName}: {bestResult.percentage}% ({bestResult.durationSec}s)
-          </Text>
+          <>
+            <Text style={styles.bestText}>
+              {safeName(bestResult.userName)}: {bestResult.percentage}% ({bestResult.durationSec}s)
+            </Text>
+            <Text style={styles.bestMeta}>
+              {formatDateTime(bestResult.playedAt)} • {bestResult.categoryName} • {bestResult.difficulty.toUpperCase()} •{' '}
+              {prettyType(bestResult.questionType)}
+            </Text>
+          </>
         ) : (
           <Text style={styles.emptyText}>No data yet</Text>
         )}
@@ -48,9 +76,14 @@ export default function ResultScreen({
         <Text style={styles.sectionTitle}>Leaderboard (Top 5)</Text>
         {topResults.length > 0 ? (
           topResults.map((item, index) => (
-            <Text key={item.id} style={styles.historyText}>
-              {index + 1}. {item.userName} — {item.percentage}% ({item.durationSec}s)
-            </Text>
+            <View key={item.id} style={styles.row}>
+              <Text style={styles.historyText}>
+                {index + 1}. {safeName(item.userName)} — {item.percentage}% ({item.durationSec}s)
+              </Text>
+              <Text style={styles.rowMeta}>
+                {item.score}/{item.total} • {item.categoryName}
+              </Text>
+            </View>
           ))
         ) : (
           <Text style={styles.emptyText}>No records</Text>
@@ -61,9 +94,15 @@ export default function ResultScreen({
         <Text style={styles.sectionTitle}>Last games</Text>
         {lastResults.length > 0 ? (
           lastResults.map((item) => (
-            <Text key={item.id} style={styles.historyText}>
-              {item.userName}: {item.score}/{item.total} ({item.percentage}%)
-            </Text>
+            <View key={item.id} style={styles.row}>
+              <Text style={styles.historyText}>
+                {safeName(item.userName)}: {item.score}/{item.total} ({item.percentage}%)
+              </Text>
+              <Text style={styles.rowMeta}>
+                {formatDateTime(item.playedAt)} • {item.categoryName} • {item.difficulty.toUpperCase()} •{' '}
+                {prettyType(item.questionType)}
+              </Text>
+            </View>
           ))
         ) : (
           <Text style={styles.emptyText}>No history</Text>
@@ -92,10 +131,29 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 35,
   },
-  title: { fontSize: 30, fontWeight: 'bold', marginBottom: 12, color: '#fff' },
-  totalText: { fontSize: 32, color: '#fff', fontWeight: 'bold' },
-  percentText: { fontSize: 22, color: '#FFD54F', marginTop: 6, fontWeight: 'bold' },
-  timeText: { fontSize: 18, color: '#bbb', marginTop: 4, marginBottom: 18 },
+  title: {
+    fontSize: 30,
+    fontWeight: 'bold',
+    marginBottom: 12,
+    color: '#fff',
+  },
+  totalText: {
+    fontSize: 32,
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  percentText: {
+    fontSize: 22,
+    color: '#FFD54F',
+    marginTop: 6,
+    fontWeight: 'bold',
+  },
+  timeText: {
+    fontSize: 18,
+    color: '#bbb',
+    marginTop: 4,
+    marginBottom: 18,
+  },
   sectionBox: {
     width: '100%',
     backgroundColor: '#1e1e1e',
@@ -110,10 +168,45 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     textAlign: 'center',
   },
-  bestText: { fontSize: 18, color: '#FFD54F', textAlign: 'center', fontWeight: 'bold' },
-  historyText: { fontSize: 16, color: '#fff', textAlign: 'left', marginBottom: 6 },
-  emptyText: { fontSize: 16, color: '#aaa', textAlign: 'center' },
-  meta: { color: '#aaa', marginBottom: 14 },
+  bestText: {
+    fontSize: 18,
+    color: '#FFD54F',
+    textAlign: 'center',
+    fontWeight: 'bold',
+    marginBottom: 6,
+  },
+  bestMeta: {
+    fontSize: 13,
+    color: '#aaa',
+    textAlign: 'center',
+    lineHeight: 18,
+  },
+  row: {
+    marginBottom: 10,
+    paddingBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#2c2c2c',
+  },
+  historyText: {
+    fontSize: 16,
+    color: '#fff',
+    textAlign: 'left',
+    marginBottom: 3,
+  },
+  rowMeta: {
+    fontSize: 13,
+    color: '#aaa',
+    lineHeight: 18,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: '#aaa',
+    textAlign: 'center',
+  },
+  meta: {
+    color: '#aaa',
+    marginBottom: 14,
+  },
   restartButton: {
     backgroundColor: '#E85A4F',
     paddingVertical: 12,
@@ -121,7 +214,11 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginTop: 8,
   },
-  restartButtonText: { color: '#fff', fontSize: 17, fontWeight: '700' },
+  restartButtonText: {
+    color: '#fff',
+    fontSize: 17,
+    fontWeight: '700',
+  },
   menuButton: {
     backgroundColor: '#2C2C2C',
     paddingVertical: 12,
@@ -131,5 +228,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#444',
   },
-  menuButtonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+  menuButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
 });
