@@ -169,16 +169,16 @@ Seejärel:
 Lisa siia oma pildid pärast tegemist.
 
 Main screen
-![Task list](screenshots/main.png)
+![Task list](screenshots/main.PNG)
 
 Quiz screen
-![Task list](screenshots/question.png)
+![Task list](screenshots/question.PNG)
 
 Result screen
-![Task list](screenshots/result.png)
+![Task list](screenshots/result.PNG)
 
 Leaderboard / Last games
-![Task list](screenshots/last.png)
+![Task list](screenshots/last.PNG)
 
 9) Võimalikud edasised parandused
 - Ühtlustada kogu UI tekst ühe keele peale (EN või ET).
